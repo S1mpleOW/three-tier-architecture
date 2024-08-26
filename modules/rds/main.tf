@@ -9,7 +9,7 @@ locals {
 resource "aws_db_instance" "main" {
   engine                       = var.engine_name
   engine_version               = var.engine_version
-  allocated_storage            = var.storage 
+  allocated_storage            = var.storage
   db_subnet_group_name         = var.db_subnet_group_name
   identifier                   = var.identifier
   instance_class               = var.instance_class
@@ -21,6 +21,8 @@ resource "aws_db_instance" "main" {
   publicly_accessible          = var.publicly_accessible
   vpc_security_group_ids       = [var.db_security_group]
   skip_final_snapshot          = var.database_snapshot
-
-  tags = local.required_tags
+  tags                    = local.required_tags
+  backup_retention_period = var.backup_retention_period
+  backup_window           = var.backup_window
+  maintenance_window      = var.maintenance_window
 }

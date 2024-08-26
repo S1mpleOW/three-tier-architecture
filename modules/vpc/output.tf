@@ -4,7 +4,7 @@ output "vpc_id" {
 }
 
 output "gateway_id" {
-  description = "Identifier of the VPC Internet Gateway" 
+  description = "Identifier of the VPC Internet Gateway"
   value = aws_internet_gateway.main.id
 }
 
@@ -18,12 +18,17 @@ output "app_security_group" {
   value = aws_security_group.app_security_group.id
 }
 
-output "alb_security_group" {
-  description = "Application Load Balancer Security Group"
-  value = aws_security_group.alb_security_group.id
-}
-
 output "db_security_group" {
   description = "Database Security Group"
   value = aws_security_group.db_security_group.id
+}
+
+output "alb_policy_increase_ec2_arn" {
+  description = "Application Load Balancer Policy"
+  value = aws_autoscaling_policy.increase_ec2.arn
+}
+
+output "alb_policy_decrease_ec2_arn" {
+  description = "Application Load Balancer Policy"
+  value = aws_autoscaling_policy.decrease_ec2.arn
 }

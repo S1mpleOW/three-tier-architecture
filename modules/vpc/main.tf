@@ -1,12 +1,12 @@
 locals {
   required_tags = {
-    project     = "three-tier-architecture"
-    environment = "dev"
+    project     = var.project_name
+    environment = var.environment
   }
 
   ingress_rules = [{
-    port        = 80
-    description = "Allow HTTP access"
+      port        = 80
+      description = "Allow HTTP access"
     },
     {
       port        = 443
@@ -23,7 +23,7 @@ locals {
   }]
 
   egress_rules = [{
-     port        = 0
+    port        = 0
     description = "Allow all Egress traffic"
   }]
 }
@@ -39,7 +39,7 @@ resource "aws_vpc" "main" {
 
 #Public subnet
 resource "aws_subnet" "public_subnet" {
-  vpc_id                  = var.vpc_id
+  vpc_id                  = aws_vpc.main.id
   for_each                = var.public_subnet
   availability_zone       = each.key
   cidr_block              = each.value
@@ -50,7 +50,7 @@ resource "aws_subnet" "public_subnet" {
 
 #Private subnet
 resource "aws_subnet" "private_subnet" {
-  vpc_id            = var.vpc_id
+  vpc_id            = aws_vpc.main.id
   for_each          = var.private_subnet
   availability_zone = each.key
   cidr_block        = each.value
@@ -60,7 +60,7 @@ resource "aws_subnet" "private_subnet" {
 
 #Database Subnet
 resource "aws_subnet" "database_subnet" {
-  vpc_id            = var.vpc_id
+  vpc_id            = aws_vpc.main.id
   for_each          = var.database_subnet
   availability_zone = each.key
   cidr_block        = each.value
@@ -70,19 +70,19 @@ resource "aws_subnet" "database_subnet" {
 
 #Internet Gateway for the Public Subnet
 resource "aws_internet_gateway" "main" {
-  vpc_id = var.vpc_id
+  vpc_id = aws_vpc.main.id
 
   tags = merge(local.required_tags, { Name = "Internet-Gateway" })
 }
 
 #Route Table for the Internet Gateway / Public Subnet
 resource "aws_route_table" "main" {
-  vpc_id = var.vpc_id
+  vpc_id = aws_vpc.main.id
   for_each = var.public_subnet
 
   route {
     cidr_block             = var.cidr_block
-    gateway_id             = var.gateway_id 
+    gateway_id             = aws_internet_gateway.main.id
   }
 
   tags = merge(local.required_tags, { Name = "Public-Route-Table" })
@@ -100,8 +100,8 @@ resource "aws_lb" "main" {
   name               = var.app_alb
   internal           = var.alb_internal
   load_balancer_type = var.load_balancer_type
-  security_groups    = [var.alb_security_group]
-  subnets            = [for value in aws_subnet.public_subnet : value.id] 
+  security_groups    = [aws_security_group.alb_security_group.id]
+  subnets            = [for value in aws_subnet.public_subnet : value.id]
 
   tags = merge(local.required_tags, { Name = "Application-ALB" })
 }
@@ -123,7 +123,7 @@ resource "aws_lb_target_group" "main" {
   name     = var.alb_target_group
   port     = var.alb_target_group_port
   protocol = var.alb_target_group_protocol
-  vpc_id   = var.vpc_id
+  vpc_id   = aws_vpc.main.id
 
   health_check {
     protocol  = var.alb_target_group_protocol
@@ -147,6 +147,29 @@ resource "aws_autoscaling_group" "main" {
   }
 }
 
+# Policy that increases the number of instances by 1 when triggered,
+# also using the "SimpleScaling" policy type.
+resource "aws_autoscaling_policy" "increase_ec2" {
+    name                   = "increase-ec2"
+    scaling_adjustment     = 1
+    adjustment_type        = "ChangeInCapacity"
+    cooldown               = 300
+    autoscaling_group_name = aws_autoscaling_group.main.name
+    policy_type = "SimpleScaling"
+
+}
+
+# Policy that decreases the number of instances by 1 when triggered,
+# also using the "SimpleScaling" policy type.
+resource "aws_autoscaling_policy" "decrease_ec2" {
+    name                   = "decrease-ec2"
+    scaling_adjustment     = -1
+    adjustment_type        = "ChangeInCapacity"
+    cooldown               = 300
+    autoscaling_group_name = aws_autoscaling_group.main.name
+    policy_type = "SimpleScaling"
+}
+
 # Database Subnet Group
 resource "aws_db_subnet_group" "main" {
   name       = var.db_subnet_group_name
@@ -161,7 +184,7 @@ resource "aws_db_subnet_group" "main" {
 resource "aws_security_group" "alb_security_group" {
   name        = var.alb_security_group_name
   description = "Security Group for Application Load Balancer"
-  vpc_id      = var.vpc_id
+  vpc_id      = aws_vpc.main.id
 
     dynamic "ingress" {
     for_each = local.ingress_rules
@@ -193,12 +216,12 @@ resource "aws_security_group" "alb_security_group" {
 }
 
 ################################################################################
-# EC2 - Security Group 
+# EC2 - Security Group
 ################################################################################
 resource "aws_security_group" "app_security_group" {
   name        = var.app_security_group_name
   description = "Security Group for EC2 Host"
-  vpc_id      = var.vpc_id
+  vpc_id      = aws_vpc.main.id
 
   dynamic "ingress" {
     for_each = local.ingress_rules
@@ -209,8 +232,7 @@ resource "aws_security_group" "app_security_group" {
       to_port     = ingress.value.port
       protocol    = "tcp"
       cidr_blocks = [var.cidr_block]
-      security_groups = [var.alb_security_group]
-
+      security_groups = [aws_security_group.alb_security_group.id]
     }
   }
 
@@ -237,7 +259,7 @@ resource "aws_security_group" "app_security_group" {
 resource "aws_security_group" "db_security_group" {
   name        = var.db_security_group_name
   description = "Security Group for RDS MySQL Database"
-  vpc_id      = var.vpc_id
+  vpc_id      = aws_vpc.main.id
 
   dynamic "ingress" {
     for_each = local.rds_ingress_rules

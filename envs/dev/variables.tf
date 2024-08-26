@@ -1,7 +1,6 @@
 variable "region" {
   description = "AWS Region"
   type        = string
-  default     = "eu-west-2"
 }
 
 variable "project_name" {
@@ -17,14 +16,8 @@ variable "environment" {
 }
 
 ################################################################################
-# VPC Module - Variables 
+# VPC Module - Variables
 ################################################################################
-
-variable "vpc_id" {
-  description = "The VPC to be deployed"
-  type        = string
-  default     = "aws_vpc.main.id"
-}
 
 variable "vpc_cidr" {
   description = "The VPC Network Range"
@@ -35,31 +28,16 @@ variable "vpc_cidr" {
 variable "public_subnet" {
   description = "A list of public subnets inside the VPC"
   type        = map(string)
-  default = {
-    "eu-west-2a" : "10.0.0.0/24",
-    "eu-west-2b" : "10.0.1.0/24",
-    "eu-west-2c" : "10.0.2.0/24"
-  }
 }
 
 variable "private_subnet" {
   description = "A list of private subnets inside the VPC"
   type        = map(string)
-  default = {
-    "eu-west-2a" : "10.0.101.0/24",
-    "eu-west-2b" : "10.0.102.0/24",
-    "eu-west-2c" : "10.0.103.0/24"
-  }
 }
 
 variable "database_subnet" {
   description = "A list of database subnets inside the VPC"
   type        = map(string)
-  default = {
-    "eu-west-2a" : "10.0.201.0/24",
-    "eu-west-2b" : "10.0.202.0/24",
-    "eu-west-2c" : "10.0.203.0/24"
-  }
 }
 
 variable "availability_zones" {
@@ -77,12 +55,6 @@ variable "route_table_id" {
   description = "The ID of the Routing Table"
   type        = string
   default     = "aws_route_table.main[each.key].id"
-}
-
-variable "gateway_id" {
-  description = "Identifier of the VPC Internet Gateway"
-  type        = string
-  default     = "aws_internet_gateway.main.id"
 }
 
 variable "subnet_id" {
@@ -166,7 +138,7 @@ variable "app_autoscaling_group" {
 variable "desired_capacity" {
   description = "The number of EC2 instances that should be running in the group"
   type        = string
-  default     = "3"
+  default     = "1"
 }
 
 variable "max_size" {
@@ -178,7 +150,7 @@ variable "max_size" {
 variable "min_size" {
   description = "The minimum size of the autoscale group"
   type        = string
-  default     = "3"
+  default     = "1"
 }
 
 variable "db_subnet_group_name" {
@@ -218,7 +190,7 @@ variable "app_security_group" {
 }
 
 ################################################################################
-# EC2 Module - Variables 
+# EC2 Module - Variables
 ################################################################################
 
 variable "image_id" {
@@ -270,7 +242,7 @@ variable "connection_host" {
 }
 
 ################################################################################
-# RDS Module - Variables 
+# RDS Module - Variables
 ################################################################################
 
 variable "engine_name" {
@@ -300,7 +272,7 @@ variable "identifier" {
 variable "instance_class" {
   description = "Instance Type of the Database"
   type        = string
-  default     = "db.t2.nano"
+  default     = "db.t3.micro"
 }
 
 variable "multi_az" {
@@ -318,14 +290,12 @@ variable "database_name" {
 variable "database_username" {
   description = "Database Username"
   type        = string
-  default     = "dbadmin"
 }
 
 variable "database_password" {
   description = "Database Password"
   sensitive   = "true"
   type        = string
-  default     = "S0methingS3cure!"
 }
 
 variable "database_port" {
@@ -350,4 +320,32 @@ variable "database_snapshot" {
   description = "Snapshot of the Database"
   type        = string
   default     = "true"
+}
+
+variable "backup_retention_period" {
+  description = "Backup Retention Period"
+  type = string
+  default = 7
+}
+
+variable "backup_window" {
+  description = "Value of the backup window"
+  type = string
+  default = "03:00-04:00"
+}
+
+variable "maintenance_window" {
+  description = "Value of the maintenance window"
+  type = string
+  default = "sun:05:00-sun:06:00"
+}
+
+variable "discord_webhook_url" {
+  description = "Discord Webhook URL"
+  type        = string
+}
+
+variable "aws_lambda_function_arn" {
+  description = "AWS Lambda Function ARN"
+  type        = string
 }

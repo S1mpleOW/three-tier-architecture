@@ -8,10 +8,6 @@ variable "environment" {
   type = string
 }
 
-variable "vpc_id" {
-  description = "The VPC to be deployed"
-  type = string
-}
 
 variable "vpc_cidr" {
   description = "The VPC Network Range"
@@ -48,10 +44,6 @@ variable "route_table_id" {
   type = string
 }
 
-variable "gateway_id" {
-  description = "Identifier of the VPC Internet Gateway"
-  type = string
-}
 
 variable "subnet_id" {
   description =  "subnet ID which resources will be launched in"
@@ -75,7 +67,7 @@ variable "app_alb" {
 
 variable "alb_internal" {
   description = "Application Load Balancer Network Type"
-  type = string 
+  type = string
 }
 
 variable "load_balancer_arn" {
@@ -155,11 +147,6 @@ variable "app_security_group_name" {
 
 variable "db_security_group_name" {
   description = "Database Security Group Name"
-  type = string
-}
-
-variable "alb_security_group" {
-  description = "Application Load Balancer Security Group"
   type = string
 }
 

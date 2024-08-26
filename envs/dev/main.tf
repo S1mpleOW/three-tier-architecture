@@ -2,11 +2,10 @@ provider "aws" {
   region = var.region
 }
 
-module "vpc" {
-  source                    = "./modules/vpc"
+module "VPC" {
+  source                    = "../../modules/vpc"
   project_name              = var.project_name
   environment               = var.environment
-  vpc_id                    = module.vpc.vpc_id
   vpc_cidr                  = var.vpc_cidr
   public_subnet             = var.public_subnet
   private_subnet            = var.private_subnet
@@ -14,7 +13,6 @@ module "vpc" {
   availability_zones        = var.availability_zones
   cidr_block                = var.cidr_block
   route_table_id            = var.route_table_id
-  gateway_id                = module.vpc.gateway_id
   subnet_id                 = var.subnet_id
   id_app                    = module.ec2.id_app
   load_balancer_type        = var.load_balancer_type
@@ -36,18 +34,16 @@ module "vpc" {
   alb_security_group_name   = var.alb_security_group_name
   app_security_group_name   = var.app_security_group_name
   db_security_group_name    = var.db_security_group_name
-  alb_security_group        = module.vpc.alb_security_group
   app_security_group        = var.app_security_group
-
 }
 
 module "ec2" {
-  source             = "./modules/ec2"
+  source             = "../../modules/ec2"
   project_name       = var.project_name
   environment        = var.environment
   image_id           = var.image_id
   instance_type      = var.instance_type
-  app_security_group = module.vpc.app_security_group
+  app_security_group = module.VPC.app_security_group
   name_prefix        = var.name_prefix
   key_name           = var.key_name
   connection_type    = var.connection_type
@@ -55,8 +51,24 @@ module "ec2" {
   connection_host    = var.connection_host
 }
 
+module "sns" {
+  source = "../../modules/sns/"
+  discord_webhook_url = var.discord_webhook_url
+  role_lambda_arn = "arn:aws:iam::856971625808:role/service-role/SendDiscordNotification-role-3ue1jonw"
+  sns_name = "DiscordNotificationTopic"
+  aws_lambda_function_arn = var.aws_lambda_function_arn
+}
+
+module "cloudwatch" {
+  source = "../../modules/cloudwatch"
+  increase_ec2_arn = module.VPC.alb_policy_increase_ec2_arn
+  decrease_ec2_arn = module.VPC.alb_policy_decrease_ec2_arn
+  sns_topic_arn = module.sns.sns_topic_arn
+  instance_id = module.ec2.id_app
+}
+
 module "rds" {
-  source               = "./modules/rds"
+  source               = "../../modules/rds/"
   project_name         = var.project_name
   environment          = var.environment
   engine_name          = var.engine_name
@@ -73,4 +85,7 @@ module "rds" {
   publicly_accessible  = var.publicly_accessible
   db_security_group    = module.vpc.db_security_group
   database_snapshot    = var.database_snapshot
+  backup_retention_period = var.backup_retention_period
+  backup_window = var.backup_window
+  maintenance_window = var.maintenance_window
 }

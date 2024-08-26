@@ -78,3 +78,18 @@ variable "database_snapshot" {
   description = "Snapshot of the Database"
   type = string
 }
+
+variable "backup_retention_period" {
+  description = "Backup Retention Period"
+  type = string
+}
+
+variable "backup_window" {
+  description = "Value of the backup window"
+  type = string
+}
+
+variable "maintenance_window" {
+  description = "Value of the maintenance window"
+  type = string
+}
