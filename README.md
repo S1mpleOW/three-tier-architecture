@@ -1,5 +1,13 @@
 # Cloud Infrastructure with Terraform
 
+# Pre-requisites
+
+- [Terraform](https://learn.hashicorp.com/tutorials/terraform/install-cli)
+- [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)
+- [AWS Account](https://aws.amazon.com/free/)
+
+- Make sure you have the AWS CLI installed and configured with your AWS account credentials.
+
 # Deployment Steps
 
 #### 1. Clone the repo
